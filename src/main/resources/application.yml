@@ -1,6 +1,6 @@
 spring:
   application:
-    name: defengapi-backend
+    name: fenapi-backend
   # DataSource Config
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -32,3 +32,16 @@ mybatis-plus:
       logic-delete-field: isDelete # 全局逻辑删除的实体字段名(since 3.3.0,配置后可以忽略不配置步骤2)
       logic-delete-value: 1 # 逻辑已删除值(默认为 1)
       logic-not-delete-value: 0 # 逻辑未删除值(默认为 0)
+fenapi:
+  client:
+    access-key: defen
+    secret-key: 12345678
+dubbo:
+  application:
+    name: dubbo-springboot-demo-provider
+  protocol:
+    name: dubbo
+    port: -1
+  registry:
+    id: nacos-registry
+    address: nacos://localhost:8848

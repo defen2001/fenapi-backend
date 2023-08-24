@@ -1,6 +1,6 @@
 package com.defen.project.service;
 
-import com.defen.project.model.entity.User;
+import com.defen.fenapi.service.UserService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
