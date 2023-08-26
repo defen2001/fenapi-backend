@@ -6,12 +6,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-//@EnableDubbo
 @MapperScan("com.defen.fenapi.mapper")
-public class MyApplication {
-
+//@EnableDubbo
+public class FenapiAdminApplication {
     public static void main(String[] args) {
-        SpringApplication.run(MyApplication.class, args);
+        SpringApplication.run(FenapiAdminApplication.class, args);
     }
-
 }

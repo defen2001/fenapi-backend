@@ -1,10 +1,10 @@
 package com.defen.fenapi.utils;
 
+import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.util.Random;
-import javax.imageio.ImageIO;
 import java.io.OutputStream;
+import java.util.Random;
 
 public class CaptchaService {
     private static final String CAPTCHA_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";

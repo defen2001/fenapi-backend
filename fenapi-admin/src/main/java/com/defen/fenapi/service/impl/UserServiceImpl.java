@@ -4,11 +4,11 @@ import cn.hutool.core.util.RandomUtil;
 import cn.hutool.crypto.digest.DigestUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.defen.fenapi.common.ErrorCode;
 import com.defen.fenapi.constant.UserConstant;
 import com.defen.fenapi.exception.BusinessException;
 import com.defen.fenapi.mapper.UserMapper;
 import com.defen.fenapi.service.UserService;
-import com.defen.fenapi.common.ErrorCode;
 import com.defen.fenapicommon.model.entity.User;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -17,6 +17,7 @@ import org.springframework.util.DigestUtils;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.math.BigDecimal;
 
 
 /**
