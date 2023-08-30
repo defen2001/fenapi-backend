@@ -1,14 +1,12 @@
 package com.defen.fenapiclientsdk.client;
 
-import cn.hutool.core.util.CharsetUtil;
 import cn.hutool.core.util.RandomUtil;
-import cn.hutool.core.util.URLUtil;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
 import cn.hutool.http.HttpUtil;
 import cn.hutool.json.JSONUtil;
+import com.defen.fenapiclientsdk.model.User;
 
-import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -52,28 +50,29 @@ public class FenApiClient {
     }
 
 
-    private Map<String, String> getHeaderMap(String body, String method) throws UnsupportedEncodingException {
+    private Map<String, String> getHeaderMap(String body) {
         Map<String, String> hashMap = new HashMap<>();
         hashMap.put("accessKey", accessKey);
         // 一定不能直接发送
 //        hashMap.put("secretKey", secretKey);
         hashMap.put("nonce", RandomUtil.randomNumbers(4));
-        body = URLUtil.encode(body, CharsetUtil.CHARSET_UTF_8);
         hashMap.put("body", body);
         hashMap.put("timestamp", String.valueOf(System.currentTimeMillis() / 1000));
         hashMap.put("sign", genSign(body, secretKey));
-        hashMap.put("method", method);
         return hashMap;
     }
 
 
 
-    public String invokeInterface(String params, String url, String method) throws UnsupportedEncodingException {
-        HttpResponse httpResponse = HttpRequest.post(GATEWAY_HOST + url)
-                .header("Accept-Charset", CharsetUtil.UTF_8)
-                .addHeaders(getHeaderMap(params, method))
-                .body(params)
+    public String getUsernameByPost(User user) {
+        String json = JSONUtil.toJsonStr(user);
+        HttpResponse httpResponse = HttpRequest.post(GATEWAY_HOST + "/api/name/user")
+                .addHeaders(getHeaderMap(json))
+                .body(json)
                 .execute();
-        return JSONUtil.formatJsonStr(httpResponse.body());
+        System.out.println(httpResponse.getStatus());
+        String result = httpResponse.body();
+        System.out.println(result);
+        return result;
     }
 }
