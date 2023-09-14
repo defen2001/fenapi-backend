@@ -83,7 +83,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             user.setUserPassword(encryptPassword);
             user.setAccessKey(accessKey);
             user.setSecretKey(secretKey);
-            user.setUserAvatar("https://image-fenapi-1319981817.cos.ap-guangzhou.myqcloud.com/imageHost/PU2babt2-43314997.png?q-sign-algorithm=sha1&q-ak=AKID-8nZtUnQSk9J8uJdlMb72Bq6_vJ0aXz_uJDzAUed15EEGQR5eUTdEKy35FiRBQrN&q-sign-time=1694606870;1694610470&q-key-time=1694606870;1694610470&q-header-list=host&q-url-param-list=ci-process&q-signature=a9e4c1286af5e0a671fc431a72930f054e398a23&x-cos-security-token=8VG1ev5PI6fHQECuL608qYt1qYhclL2a2a9f7cb1009569622918b30bc359bbadI4Muzgvpd0Jxxavo_xnikrPq-hCmNZ8nIPp1EHm625oDWruzOv43hzw-pcpgYunLkfwk3p9crCGfOkCJyeqa8zbvgSGYuJlWG50swbmBYkwQ8D8_MfQZZ2jDFZdGk0e_Lc_dgw32kQ1PoLyDyxraXsVpmycRdh0wQTOJtZvC5-i_cgTsqjuC3O1sV20U4PPQ&ci-process=originImage");
+            user.setUserAvatar("\thttps://image-fenapi-1319981817.cos.ap-guangzhou.myqcloud.com/imageHost/PU2babt2-43314997.png");
             boolean saveResult = this.save(user);
             if (!saveResult) {
                 throw new BusinessException(ErrorCode.SYSTEM_ERROR, "注册失败，数据库错误");
