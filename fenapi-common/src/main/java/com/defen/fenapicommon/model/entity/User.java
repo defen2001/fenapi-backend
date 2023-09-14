@@ -21,14 +21,20 @@ public class User implements Serializable {
     private Long id;
 
     /**
+     * 用户账号
+     */
+    private String userAccount;
+
+    /**
+     * 用户密码
+     */
+    private String userPassword;
+
+
+    /**
      * 用户昵称
      */
     private String userName;
-
-    /**
-     * 账号
-     */
-    private String userAccount;
 
     /**
      * 用户头像
@@ -36,27 +42,22 @@ public class User implements Serializable {
     private String userAvatar;
 
     /**
-     * 性别
+     * 用户简介
      */
-    private Integer gender;
+    private String userProfile;
 
     /**
-     * 用户角色: user, admin
+     * 用户角色：user/admin/ban
      */
     private String userRole;
 
     /**
-     * 密码
-     */
-    private String userPassword;
-
-    /**
-     * ak
+     * accessKey
      */
     private String accessKey;
 
     /**
-     * sk
+     * secretKey
      */
     private String secretKey;
 
@@ -77,5 +78,5 @@ public class User implements Serializable {
     private Integer isDelete;
 
     @TableField(exist = false)
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = -7572280859051489820L;
 }

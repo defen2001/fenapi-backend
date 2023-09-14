@@ -1,6 +1,6 @@
 package com.defen.fenapi.exception;
 
-import com.defen.fenapi.common.ErrorCode;
+import com.defen.fenapicommon.common.ErrorCode;
 
 /**
  * 自定义异常类

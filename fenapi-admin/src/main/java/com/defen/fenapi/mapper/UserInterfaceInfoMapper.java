@@ -13,6 +13,12 @@ import java.util.List;
 */
 public interface UserInterfaceInfoMapper extends BaseMapper<UserInterfaceInfo> {
 
+    /**
+     * 获取接口调用排名前 n 的接口信息
+     *
+     * @param limit 前几名
+     * @return List<InterfaceInfoVO>
+     */
     List<UserInterfaceInfo> listTopInvokeInterfaceInfo(int limit);
 }
 

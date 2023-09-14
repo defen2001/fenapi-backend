@@ -18,7 +18,7 @@ public class FenApiClientConfig {
     private String secretKey;
 
     @Bean
-    public FenApiClient deFenApiClient(){
-        return new FenApiClient(accessKey,secretKey);
+    public FenApiClient deFenApiClient() {
+        return new FenApiClient(accessKey, secretKey);
     }
 }

@@ -24,13 +24,13 @@ public class Knife4jConfig {
     public Docket defaultApi2() {
         return new Docket(DocumentationType.SWAGGER_2)
                 .apiInfo(new ApiInfoBuilder()
-                        .title("project-backend")
-                        .description("project-backend")
+                        .title("接口文档")
+                        .description("fenapi-backend")
                         .version("1.0")
                         .build())
                 .select()
                 // 指定 Controller 扫描包路径
-                .apis(RequestHandlerSelectors.basePackage("com.defen.project.controller"))
+                .apis(RequestHandlerSelectors.basePackage("com.defen.fenapi.controller"))
                 .paths(PathSelectors.any())
                 .build();
     }

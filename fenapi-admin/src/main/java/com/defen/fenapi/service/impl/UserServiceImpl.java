@@ -3,21 +3,30 @@ package com.defen.fenapi.service.impl;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.crypto.digest.DigestUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.defen.fenapi.common.ErrorCode;
-import com.defen.fenapi.constant.UserConstant;
+import com.defen.fenapicommon.common.ErrorCode;
+import com.defen.fenapicommon.constant.CommonConstant;
+import com.defen.fenapicommon.constant.UserConstant;
 import com.defen.fenapi.exception.BusinessException;
 import com.defen.fenapi.mapper.UserMapper;
+import com.defen.fenapicommon.model.dto.user.UserQueryRequest;
+import com.defen.fenapicommon.model.vo.LoginUserVO;
+import com.defen.fenapicommon.model.vo.UserVO;
 import com.defen.fenapi.service.UserService;
+import com.defen.fenapi.utils.SqlUtils;
 import com.defen.fenapicommon.model.entity.User;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 
 /**
@@ -70,9 +79,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             // 3. 插入数据
             User user = new User();
             user.setUserAccount(userAccount);
+            user.setUserName(StringUtils.upperCase(userAccount));
             user.setUserPassword(encryptPassword);
             user.setAccessKey(accessKey);
             user.setSecretKey(secretKey);
+            user.setUserAvatar("https://image-fenapi-1319981817.cos.ap-guangzhou.myqcloud.com/imageHost/PU2babt2-43314997.png?q-sign-algorithm=sha1&q-ak=AKID-8nZtUnQSk9J8uJdlMb72Bq6_vJ0aXz_uJDzAUed15EEGQR5eUTdEKy35FiRBQrN&q-sign-time=1694606870;1694610470&q-key-time=1694606870;1694610470&q-header-list=host&q-url-param-list=ci-process&q-signature=a9e4c1286af5e0a671fc431a72930f054e398a23&x-cos-security-token=8VG1ev5PI6fHQECuL608qYt1qYhclL2a2a9f7cb1009569622918b30bc359bbadI4Muzgvpd0Jxxavo_xnikrPq-hCmNZ8nIPp1EHm625oDWruzOv43hzw-pcpgYunLkfwk3p9crCGfOkCJyeqa8zbvgSGYuJlWG50swbmBYkwQ8D8_MfQZZ2jDFZdGk0e_Lc_dgw32kQ1PoLyDyxraXsVpmycRdh0wQTOJtZvC5-i_cgTsqjuC3O1sV20U4PPQ&ci-process=originImage");
             boolean saveResult = this.save(user);
             if (!saveResult) {
                 throw new BusinessException(ErrorCode.SYSTEM_ERROR, "注册失败，数据库错误");
@@ -82,7 +93,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     }
 
     @Override
-    public User userLogin(String userAccount, String userPassword, HttpServletRequest request) {
+    public LoginUserVO userLogin(String userAccount, String userPassword, HttpServletRequest request) {
         // 1. 校验
         if (StringUtils.isAnyBlank(userAccount, userPassword)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数为空");
@@ -107,7 +118,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         }
         // 3. 记录用户的登录态
         request.getSession().setAttribute(UserConstant.USER_LOGIN_STATE, user);
-        return user;
+        return this.getLoginUserVO(user);
     }
 
     /**
@@ -160,6 +171,95 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         // 移除登录态
         request.getSession().removeAttribute(UserConstant.USER_LOGIN_STATE);
         return true;
+    }
+
+    /**
+     * 获取脱敏的已登录用户信息
+     *
+     * @param user
+     * @return
+     */
+    @Override
+    public LoginUserVO getLoginUserVO(User user) {
+        if (user == null) {
+            return null;
+        }
+        LoginUserVO loginUserVO = new LoginUserVO();
+        BeanUtils.copyProperties(user, loginUserVO);
+        return loginUserVO;
+    }
+
+    /**
+     * 获取脱敏的用户信息
+     *
+     * @param user
+     * @return
+     */
+    @Override
+    public UserVO getUserVO(User user) {
+        if (user == null) {
+            return null;
+        }
+        UserVO userVO = new UserVO();
+        BeanUtils.copyProperties(user, userVO);
+        return userVO;
+    }
+
+    /**
+     * 获取脱敏的用户信息(列表)
+     *
+     * @param userList
+     * @return
+     */
+    @Override
+    public List<UserVO> getUserVO(List<User> userList) {
+        if (CollectionUtils.isEmpty(userList)) {
+            return new ArrayList<>();
+        }
+        return userList.stream().map(this::getUserVO).collect(Collectors.toList());
+    }
+
+    /**
+     * 获取查询条件
+     *
+     * @param userQueryRequest
+     * @return
+     */
+    @Override
+    public QueryWrapper<User> getQueryWrapper(UserQueryRequest userQueryRequest) {
+        if (userQueryRequest == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "请求参数为空");
+        }
+        Long id = userQueryRequest.getId();
+        String userName = userQueryRequest.getUserName();
+        String userProfile = userQueryRequest.getUserProfile();
+        String userRole = userQueryRequest.getUserRole();
+        String sortField = userQueryRequest.getSortField();
+        String sortOrder = userQueryRequest.getSortOrder();
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq(id != null, "id", id);
+        queryWrapper.eq(StringUtils.isNotBlank(userRole), "userRole", userRole);
+        queryWrapper.like(StringUtils.isNotBlank(userProfile), "userProfile", userProfile);
+        queryWrapper.like(StringUtils.isNotBlank(userName), "userName", userName);
+        queryWrapper.orderBy(SqlUtils.validSortField(sortField), sortOrder.equals(CommonConstant.SORT_ORDER_ASC),
+                sortField);
+        return queryWrapper;
+    }
+
+    /**
+     * 更新 secretKey
+     *
+     * @param id 用户id
+     * @return
+     */
+    @Override
+    public boolean updateSecretKey(Long id) {
+        User user = this.getById(id);
+        String accessKey = DigestUtil.md5Hex(SALT + user.getUserAccount() + RandomUtil.randomNumbers(5));
+        String secretKey = DigestUtil.md5Hex(SALT + user.getUserAccount() + RandomUtil.randomNumbers(8));
+        user.setSecretKey(secretKey);
+        user.setAccessKey(accessKey);
+        return this.updateById(user);
     }
 
 }

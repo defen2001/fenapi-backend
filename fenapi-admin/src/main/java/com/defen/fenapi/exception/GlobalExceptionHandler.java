@@ -1,8 +1,8 @@
 package com.defen.fenapi.exception;
 
-import com.defen.fenapi.common.BaseResponse;
-import com.defen.fenapi.common.ErrorCode;
-import com.defen.fenapi.common.ResultUtils;
+import com.defen.fenapicommon.common.BaseResponse;
+import com.defen.fenapicommon.common.ErrorCode;
+import com.defen.fenapicommon.common.ResultUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;

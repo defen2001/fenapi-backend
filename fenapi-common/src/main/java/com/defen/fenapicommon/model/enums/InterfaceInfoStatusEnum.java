@@ -1,5 +1,7 @@
 package com.defen.fenapicommon.model.enums;
 
+import org.apache.commons.lang3.ObjectUtils;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -16,9 +18,9 @@ public enum InterfaceInfoStatusEnum {
 
     private final String text;
 
-    private final int value;
+    private final Integer value;
 
-    InterfaceInfoStatusEnum(String text, int value) {
+    InterfaceInfoStatusEnum(String text, Integer value) {
         this.text = text;
         this.value = value;
     }
@@ -30,6 +32,24 @@ public enum InterfaceInfoStatusEnum {
      */
     public static List<Integer> getValues() {
         return Arrays.stream(values()).map(item -> item.value).collect(Collectors.toList());
+    }
+
+    /**
+     * 根据 value 获取枚举
+     *
+     * @param value
+     * @return
+     */
+    public static InterfaceInfoStatusEnum getEnumByValue(String value) {
+        if (ObjectUtils.isEmpty(value)) {
+            return null;
+        }
+        for (InterfaceInfoStatusEnum anEnum : InterfaceInfoStatusEnum.values()) {
+            if (anEnum.value.equals(value)) {
+                return anEnum;
+            }
+        }
+        return null;
     }
 
     public int getValue() {

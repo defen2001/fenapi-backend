@@ -1,22 +1,24 @@
 package com.defen.fenapi.controller;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.defen.fenapi.annotation.AuthCheck;
-import com.defen.fenapi.common.*;
-import com.defen.fenapi.constant.CommonConstant;
+import com.defen.fenapicommon.common.*;
+import com.defen.fenapi.config.GatewayConfig;
+import com.defen.fenapicommon.constant.CommonConstant;
+import com.defen.fenapicommon.constant.UserConstant;
 import com.defen.fenapi.exception.BusinessException;
-import com.defen.fenapi.model.dto.interfaceinfo.InterfaceInfoAddRequest;
-import com.defen.fenapi.model.dto.interfaceinfo.InterfaceInfoInvokeRequest;
-import com.defen.fenapi.model.dto.interfaceinfo.InterfaceInfoQueryRequest;
-import com.defen.fenapi.model.dto.interfaceinfo.InterfaceInfoUpdateRequest;
-import com.defen.fenapi.model.enums.InterfaceInfoStatusEnum;
+import com.defen.fenapicommon.model.dto.interfaceinfo.InterfaceInfoAddRequest;
+import com.defen.fenapicommon.model.dto.interfaceinfo.InterfaceInfoInvokeRequest;
+import com.defen.fenapicommon.model.dto.interfaceinfo.InterfaceInfoQueryRequest;
+import com.defen.fenapicommon.model.dto.interfaceinfo.InterfaceInfoUpdateRequest;
+import com.defen.fenapicommon.model.enums.InterfaceInfoStatusEnum;
+import com.defen.fenapicommon.model.vo.InterfaceInfoVO;
 import com.defen.fenapi.service.InterfaceInfoService;
 import com.defen.fenapi.service.UserService;
 import com.defen.fenapiclientsdk.client.FenApiClient;
 import com.defen.fenapicommon.model.entity.InterfaceInfo;
 import com.defen.fenapicommon.model.entity.User;
-import com.google.gson.Gson;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -24,7 +26,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.List;
+import java.io.UnsupportedEncodingException;
 
 /**
  * 接口管理
@@ -43,8 +45,7 @@ public class InterfaceInfoController {
     private UserService userService;
 
     @Resource
-    private FenApiClient fenApiClient;
-
+    private GatewayConfig gatewayConfig;
     // region 增删改查
 
     /**
@@ -64,6 +65,8 @@ public class InterfaceInfoController {
         // 校验
         interfaceInfoService.validInterfaceInfo(interfaceInfo, true);
         User loginUser = userService.getLoginUser(request);
+        interfaceInfo.setRequestParamsRemark(JSONUtil.toJsonStr(interfaceInfoAddRequest.getRequestParamsRemark()));
+        interfaceInfo.setResponseParamsRemark(JSONUtil.toJsonStr(interfaceInfoAddRequest.getResponseParamsRemark()));
         interfaceInfo.setUserId(loginUser.getId());
         boolean result = interfaceInfoService.save(interfaceInfo);
         if (!result) {
@@ -101,34 +104,18 @@ public class InterfaceInfoController {
     }
 
     /**
-     * 更新
+     * 更新（仅管理员）
      *
      * @param interfaceInfoUpdateRequest
-     * @param request
      * @return
      */
     @PostMapping("/update")
-    public BaseResponse<Boolean> updateInterfaceInfo(@RequestBody InterfaceInfoUpdateRequest interfaceInfoUpdateRequest,
-                                                     HttpServletRequest request) {
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    public BaseResponse<Boolean> updateInterfaceInfo(@RequestBody InterfaceInfoUpdateRequest interfaceInfoUpdateRequest) {
         if (interfaceInfoUpdateRequest == null || interfaceInfoUpdateRequest.getId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        InterfaceInfo interfaceInfo = new InterfaceInfo();
-        BeanUtils.copyProperties(interfaceInfoUpdateRequest, interfaceInfo);
-        // 参数校验
-        interfaceInfoService.validInterfaceInfo(interfaceInfo, false);
-        User user = userService.getLoginUser(request);
-        long id = interfaceInfoUpdateRequest.getId();
-        // 判断是否存在
-        InterfaceInfo oldInterfaceInfo = interfaceInfoService.getById(id);
-        if (oldInterfaceInfo == null) {
-            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
-        }
-        // 仅本人或管理员可修改
-        if (!oldInterfaceInfo.getUserId().equals(user.getId()) && !userService.isAdmin(request)) {
-            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
-        }
-        boolean result = interfaceInfoService.updateById(interfaceInfo);
+        boolean result = interfaceInfoService.updateInterfaceInfo(interfaceInfoUpdateRequest);
         return ResultUtils.success(result);
     }
 
@@ -138,94 +125,108 @@ public class InterfaceInfoController {
      * @param id
      * @return
      */
-    @GetMapping("/get")
-    public BaseResponse<InterfaceInfo> getInterfaceInfoById(long id) {
+    @GetMapping("/get/vo")
+    public BaseResponse<InterfaceInfoVO> getInterfaceInfoVOById(long id, HttpServletRequest request) {
         if (id <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         InterfaceInfo interfaceInfo = interfaceInfoService.getById(id);
-        return ResultUtils.success(interfaceInfo);
+        if (interfaceInfo == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
+        }
+        InterfaceInfoVO interfaceInfoVO = interfaceInfoService.getInterfaceInfoVO(interfaceInfo, request);
+        return ResultUtils.success(interfaceInfoVO);
     }
 
     /**
-     * 获取列表（仅管理员可使用）
+     * 分页获取列表（封装类）
      *
-     * @param interfaceInfoQueryRequest
-     * @return
+     * @param interfaceInfoQueryRequest 查询条件
+     * @param request                   请求
+     * @return 分页列表
      */
-    @AuthCheck(mustRole = "admin")
-    @GetMapping("/list")
-    public BaseResponse<List<InterfaceInfo>> listInterfaceInfo(InterfaceInfoQueryRequest interfaceInfoQueryRequest) {
-        InterfaceInfo interfaceInfoQuery = new InterfaceInfo();
-        if (interfaceInfoQueryRequest != null) {
-            BeanUtils.copyProperties(interfaceInfoQueryRequest, interfaceInfoQuery);
-        }
-        QueryWrapper<InterfaceInfo> queryWrapper = new QueryWrapper<>(interfaceInfoQuery);
-        List<InterfaceInfo> interfaceInfoList = interfaceInfoService.list(queryWrapper);
-        return ResultUtils.success(interfaceInfoList);
-    }
-
-    /**
-     * 分页获取列表
-     *
-     * @param interfaceInfoQueryRequest
-     * @param request
-     * @return
-     */
-    @GetMapping("/list/page")
-    public BaseResponse<Page<InterfaceInfo>> listInterfaceInfoByPage(InterfaceInfoQueryRequest interfaceInfoQueryRequest, HttpServletRequest request) {
-        if (interfaceInfoQueryRequest == null) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
-        }
-        InterfaceInfo interfaceInfoQuery = new InterfaceInfo();
-        BeanUtils.copyProperties(interfaceInfoQueryRequest, interfaceInfoQuery);
+    @PostMapping("/list/page/vo")
+    public BaseResponse<Page<InterfaceInfoVO>> listInterfaceInfoVOByPage(@RequestBody InterfaceInfoQueryRequest interfaceInfoQueryRequest,
+                                                                         HttpServletRequest request) {
         long current = interfaceInfoQueryRequest.getCurrent();
         long size = interfaceInfoQueryRequest.getPageSize();
-        String sortField = interfaceInfoQueryRequest.getSortField();
-        String sortOrder = interfaceInfoQueryRequest.getSortOrder();
-        String description = interfaceInfoQuery.getDescription();
-        // description 需支持模糊搜索
-        interfaceInfoQuery.setDescription(null);
+        interfaceInfoQueryRequest.setSortField("createTime");
+        // 倒序排序
+        interfaceInfoQueryRequest.setSortOrder(CommonConstant.SORT_ORDER_DESC);
         // 限制爬虫
-        if (size > 50) {
+        if (size > 20) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        QueryWrapper<InterfaceInfo> queryWrapper = new QueryWrapper<>(interfaceInfoQuery);
-        queryWrapper.like(StringUtils.isNotBlank(description), "description", description);
-        queryWrapper.orderBy(StringUtils.isNotBlank(sortField),
-                sortOrder.equals(CommonConstant.SORT_ORDER_ASC), sortField);
-        Page<InterfaceInfo> interfaceInfoPage = interfaceInfoService.page(new Page<>(current, size), queryWrapper);
-        return ResultUtils.success(interfaceInfoPage);
+        Page<InterfaceInfo> interfaceInfoPage = interfaceInfoService.page(new Page<>(current, size),
+                interfaceInfoService.getQueryWrapper(interfaceInfoQueryRequest));
+        return ResultUtils.success(interfaceInfoService.getInterfaceInfoVOPage(interfaceInfoPage, request));
+    }
+
+    /**
+     * 根据 当前用户ID 分页获取列表（封装类）
+     *
+     * @param interfaceInfoQueryRequest 查询条件
+     * @param request                   请求
+     * @return 分页列表
+     */
+    @PostMapping("/my/list/page/vo")
+    public BaseResponse<Page<InterfaceInfoVO>> listInterfaceInfoVOByUserIdPage(@RequestBody InterfaceInfoQueryRequest interfaceInfoQueryRequest,
+                                                                               HttpServletRequest request) {
+        long current = interfaceInfoQueryRequest.getCurrent();
+        long size = interfaceInfoQueryRequest.getPageSize();
+        interfaceInfoQueryRequest.setSortField("createTime");
+        // 倒序排序
+        interfaceInfoQueryRequest.setSortOrder(CommonConstant.SORT_ORDER_DESC);
+        // 限制爬虫
+        if (size > 30) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        Page<InterfaceInfo> interfaceInfoPage = interfaceInfoService.page(new Page<>(current, size),
+                interfaceInfoService.getQueryWrapper(interfaceInfoQueryRequest));
+        return ResultUtils.success(interfaceInfoService.getInterfaceInfoVOByUserIdPage(interfaceInfoPage, request));
     }
 
     // endregion
 
     /**
-     * 发布
+     * 发布（仅管理员）
      *
-     * @param idRequest
-     * @param request
-     * @return
+     * @param interfaceInfoInvokeRequest 接口信息
+     * @return 是否成功
      */
     @PostMapping("/online")
-    @AuthCheck(mustRole = "admin")
-    public BaseResponse<Boolean> onlineInterfaceInfo(@RequestBody IdRequest idRequest,
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    public BaseResponse<Boolean> onlineInterfaceInfo(@RequestBody InterfaceInfoInvokeRequest interfaceInfoInvokeRequest,
                                                      HttpServletRequest request) {
 
-        if (idRequest == null || idRequest.getId() <= 0) {
+        if (interfaceInfoInvokeRequest == null || interfaceInfoInvokeRequest.getId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        Long id = idRequest.getId();
+        Long id = interfaceInfoInvokeRequest.getId();
         // 判断是否存在
         InterfaceInfo oldInterfaceInfo = interfaceInfoService.getById(id);
         if (oldInterfaceInfo == null) {
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
         }
         // 判断该接口是否可以调用
-        com.defen.fenapiclientsdk.model.User user = new com.defen.fenapiclientsdk.model.User();
-        user.setUsername("test");
-        String username = fenApiClient.getUsernameByPost(user);
-        if (StringUtils.isBlank(username)) {
+        String requestParams = interfaceInfoInvokeRequest.getRequestParams();
+        String url = oldInterfaceInfo.getUrl();
+        String method = oldInterfaceInfo.getMethod();
+        // 获取当前登录用户
+        User loginUser = userService.getLoginUser(request);
+        String accessKey = loginUser.getAccessKey();
+        String secretKey = loginUser.getSecretKey();
+        // 获取SDK客户端
+        FenApiClient fenApiClient = new FenApiClient(accessKey, secretKey);
+        // 设置网关地址
+        fenApiClient.setGatewayHost(gatewayConfig.getHost());
+        try {
+            // 执行方法
+            String invokeResult = fenApiClient.invokeInterface(requestParams, url, method);
+            if (StringUtils.isBlank(invokeResult)) {
+                throw new BusinessException(ErrorCode.SYSTEM_ERROR, "接口数据为空");
+            }
+        } catch (Exception e) {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "接口验证失败");
         }
         // 仅本人或管理员可修改
@@ -244,7 +245,7 @@ public class InterfaceInfoController {
      * @return
      */
     @PostMapping("/offline")
-    @AuthCheck(mustRole = "admin")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     public BaseResponse<Boolean> offlineInterfaceInfo(@RequestBody IdRequest idRequest,
                                                       HttpServletRequest request) {
         if (idRequest == null || idRequest.getId() <= 0) {
@@ -256,14 +257,7 @@ public class InterfaceInfoController {
         if (oldInterfaceInfo == null) {
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
         }
-        // 判断该接口是否可以调用
-        com.defen.fenapiclientsdk.model.User user = new com.defen.fenapiclientsdk.model.User();
-        user.setUsername("test");
-        String username = fenApiClient.getUsernameByPost(user);
-        if (StringUtils.isBlank(username)) {
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "接口验证失败");
-        }
-        // 仅本人或管理员可修改
+
         InterfaceInfo interfaceInfo = new InterfaceInfo();
         interfaceInfo.setId(id);
         interfaceInfo.setStatus(InterfaceInfoStatusEnum.OFFLINE.getValue());
@@ -280,27 +274,41 @@ public class InterfaceInfoController {
      */
     @PostMapping("/invoke")
     public BaseResponse<Object> invokeInterfaceInfo(@RequestBody InterfaceInfoInvokeRequest interfaceInfoInvokeRequest,
-                                                     HttpServletRequest request) {
+                                                    HttpServletRequest request) throws UnsupportedEncodingException {
         if (interfaceInfoInvokeRequest == null || interfaceInfoInvokeRequest.getId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        Long id = interfaceInfoInvokeRequest.getId();
-        String userRequestParams = interfaceInfoInvokeRequest.getUserRequestParams();
         // 判断是否存在
+        Long id = interfaceInfoInvokeRequest.getId();
         InterfaceInfo oldInterfaceInfo = interfaceInfoService.getById(id);
         if (oldInterfaceInfo == null) {
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
         }
-        if (oldInterfaceInfo.getStatus() == InterfaceInfoStatusEnum.OFFLINE.getValue()) {
-            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "接口以关闭");
+        if (oldInterfaceInfo.getStatus().equals(InterfaceInfoStatusEnum.OFFLINE.getValue())) {
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "接口已关闭");
         }
+        // 接口请求地址
+        String url = oldInterfaceInfo.getUrl();
+        String method = oldInterfaceInfo.getMethod();
+        String requestParams = interfaceInfoInvokeRequest.getRequestParams();
+        // 获取当前登录用户
         User loginUser = userService.getLoginUser(request);
         String accessKey = loginUser.getAccessKey();
         String secretKey = loginUser.getSecretKey();
+        // 获取SDK客户端
         FenApiClient fenApiClient = new FenApiClient(accessKey, secretKey);
-        Gson gson = new Gson();
-        com.defen.fenapiclientsdk.model.User user = gson.fromJson(userRequestParams, com.defen.fenapiclientsdk.model.User.class);
-        String usernameByPost = fenApiClient.getUsernameByPost(user);
-        return ResultUtils.success(usernameByPost);
+        // 设置网关地址
+        fenApiClient.setGatewayHost(gatewayConfig.getHost());
+        String invokeResult = null;
+        try {
+            // 执行方法
+            invokeResult = fenApiClient.invokeInterface(requestParams, url, method);
+            if (StringUtils.isBlank(invokeResult)) {
+                throw new BusinessException(ErrorCode.SYSTEM_ERROR, "接口数据为空");
+            }
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "接口验证失败");
+        }
+        return ResultUtils.success(invokeResult);
     }
 }

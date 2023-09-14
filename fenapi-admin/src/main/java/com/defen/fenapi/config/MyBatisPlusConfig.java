@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Configuration;
  * @author defen
  */
 @Configuration
-@MapperScan("com.defen.project.mapper")
+@MapperScan("com.defen.fenapi.mapper")
 public class MyBatisPlusConfig {
 
     /**

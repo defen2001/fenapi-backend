@@ -9,7 +9,10 @@
             <result property="name" column="name" jdbcType="VARCHAR"/>
             <result property="description" column="description" jdbcType="VARCHAR"/>
             <result property="url" column="url" jdbcType="VARCHAR"/>
+            <result property="host" column="host" jdbcType="VARCHAR"/>
             <result property="requestParams" column="requestParams" jdbcType="VARCHAR"/>
+            <result property="requestParamsRemark" column="requestParamsRemark" jdbcType="VARCHAR"/>
+            <result property="responseParamsRemark" column="responseParamsRemark" jdbcType="VARCHAR"/>
             <result property="requestHeader" column="requestHeader" jdbcType="VARCHAR"/>
             <result property="responseHeader" column="responseHeader" jdbcType="VARCHAR"/>
             <result property="status" column="status" jdbcType="INTEGER"/>
@@ -17,13 +20,14 @@
             <result property="userId" column="userId" jdbcType="BIGINT"/>
             <result property="updateTime" column="updateTime" jdbcType="TIMESTAMP"/>
             <result property="createTime" column="createTime" jdbcType="TIMESTAMP"/>
-            <result property="isDeleted" column="isDeleted" jdbcType="TINYINT"/>
+            <result property="isDelete" column="isDelete" jdbcType="TINYINT"/>
     </resultMap>
 
     <sql id="Base_Column_List">
         id,name,description,
-        url,requestParams,requestHeader,responseHeader,
+        url,host,requestParams,requestParamsRemark,
+        responseParamsRemark,requestHeader,responseHeader,
         status,method,userId,
-        updateTime,createTime,isDeleted
+        updateTime,createTime,isDelete
     </sql>
 </mapper>

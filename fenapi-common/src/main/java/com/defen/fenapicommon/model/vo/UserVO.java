@@ -1,5 +1,6 @@
 package com.defen.fenapicommon.model.vo;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -23,7 +24,7 @@ public class UserVO implements Serializable {
     private String userName;
 
     /**
-     * 账号
+     * 用户账号
      */
     private String userAccount;
 
@@ -33,24 +34,30 @@ public class UserVO implements Serializable {
     private String userAvatar;
 
     /**
-     * 性别
+     * 用户简介
      */
-    private Integer gender;
+    private String userProfile;
 
     /**
-     * 用户角色: user, admin
+     * 用户角色：user/admin/ban
      */
     private String userRole;
 
     /**
-     * 创建时间
+     * accessKey
      */
-    private Date createTime;
+    private String accessKey;
 
     /**
-     * 更新时间
+     * secretKey
      */
-    private Date updateTime;
+    private String secretKey;
+
+    /**
+     * 创建时间
+     */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private Date createTime;
 
     private static final long serialVersionUID = 1L;
 }

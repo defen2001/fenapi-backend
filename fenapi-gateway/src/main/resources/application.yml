@@ -3,13 +3,15 @@ server:
 spring:
   cloud:
     gateway:
-      default-filters:
-        - AddResponseHeader=source, defen
       routes:
         - id: api_route
           uri: http://localhost:8123
           predicates:
-            - Path=/api/**
+            - Path=/**
+  redis:
+    host: localhost
+    port: 6379
+    database: 1
 logging:
   level:
     org:
@@ -19,7 +21,7 @@ logging:
 
 dubbo:
   application:
-    name: dubbo-springboot-demo-provider
+    name: fenapi-admin-consumer
   protocol:
     name: dubbo
     port: -1

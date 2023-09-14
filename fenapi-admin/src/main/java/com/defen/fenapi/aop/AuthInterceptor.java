@@ -2,7 +2,7 @@ package com.defen.fenapi.aop;
 
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.defen.fenapi.annotation.AuthCheck;
-import com.defen.fenapi.common.ErrorCode;
+import com.defen.fenapicommon.common.ErrorCode;
 import com.defen.fenapi.exception.BusinessException;
 import com.defen.fenapi.service.UserService;
 import com.defen.fenapicommon.model.entity.User;

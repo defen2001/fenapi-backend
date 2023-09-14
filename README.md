@@ -13,7 +13,7 @@
 
 ## 后端
 - Java Spring Boot
-- MySQL 数据库
+- MySQL Redis 数据库
 - MyBatis-Plus 及 MyBatis X 自动生成
 - API 签名认证（Http 调用）
 - Spring Boot Starter（SDK 开发）
@@ -21,3 +21,51 @@
 - Swagger + Knife4j 接口文档生成
 - Spring Cloud Gateway 微服务网关
 - Hutool、Apache Common Utils、Gson 等工具库
+- 腾讯云 COS 对象存储
+
+## 业务功能
+- 全局请求响应拦截器（记录日志）
+- 全局异常处理器
+- 自定义错误码
+- 封装通用响应类
+- Swagger + Knife4j 接口文档
+- 自定义权限注解 + 全局校验
+- 全局跨域处理
+- 多环境配置
+
+## 核心业务
+- 用户登录页面开发
+- 接口管理功能开发（Ant Design 高级组件）
+- 模拟接口项目 | 示例接口开发
+- 模拟接口项目 | HTTP 客户端调用
+- API 签名认证详解及实战
+- 客户端 SDK 开发（Spring Boot Starter）
+- 接口管理功能 | 发布 / 下线接口开发
+- 接口管理功能 | 前端页面开发
+- 接口列表页面开发
+- 在线调试接口功能 | 后端接口开发
+- 在线调试接口功能 | 前端页面开发
+
+## 快速开始
+
+> 只需要修改 fen-admin 的 application.yml 文件里部分内容即可
+```yml
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/my_db
+    username: root
+    password: 123456
+# 选择性修改
+spring:
+  session:
+    store-type: redis
+# 可不配置
+cos:
+  secretId:
+  secretKey:
+  bucketName: image-fenapi-1319981817
+  region: ap-guangzhou
+  endpoint: cos.ap-guangzhou.myqcloud.com
+```
+
