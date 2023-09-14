@@ -7,7 +7,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
 @MapperScan("com.defen.fenapi.mapper")
-//@EnableDubbo
+@EnableDubbo
 public class FenapiAdminApplication {
     public static void main(String[] args) {
         SpringApplication.run(FenapiAdminApplication.class, args);
